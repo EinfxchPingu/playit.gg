@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const request = require('request');
 const cookieParser = require('cookie-parser');
+const { URL } = require('url'); // Importieren Sie das URL-Modul von Node.js
 
 const app = express();
 
@@ -34,7 +35,16 @@ app.post('/proxy', (req, res) => {
 
         // Weiterleitungen über den Proxy
         const forwardedBody = body.replace(/(href|src)="([^"]+)"/g, (match, p1, p2) => {
-            return `${p1}="/proxy?${p2}"`;
+            // Überprüfen, ob die URL eine relative URL ist
+            if (p2.startsWith('/') || p2.startsWith('./') || p2.startsWith('../')) {
+                // Konstruieren Sie die vollständige URL unter Verwendung der Basis-URL der ursprünglichen Anfrage
+                const baseUrl = new URL(url);
+                const absoluteUrl = new URL(p2, baseUrl);
+                return `${p1}="/proxy?url=${absoluteUrl}"`;
+            } else {
+                // Ansonsten handelt es sich um eine absolute URL, die nicht geändert werden muss
+                return `${p1}="${p2}"`;
+            }
         });
 
         // Cookies speichern
