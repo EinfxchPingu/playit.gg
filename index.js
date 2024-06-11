@@ -2,7 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const request = require('request');
 const cookieParser = require('cookie-parser');
-const { URL } = require('url'); // Importieren Sie das URL-Modul von Node.js
+const { URL } = require('url');
 
 const app = express();
 
@@ -12,9 +12,9 @@ app.use(cookieParser());
 // Statische Dateien im öffentlichen Verzeichnis bereitstellen
 app.use(express.static('public'));
 
-// POST-Anfragen verarbeiten
-app.post('/proxy', (req, res) => {
-    const url = req.body.url;
+// GET-Anfragen an den Proxy verarbeiten
+app.get('/proxy', (req, res) => {
+    const url = req.query.url;
     if (!url) {
         return res.status(400).send('URL not provided');
     }
@@ -60,6 +60,17 @@ app.post('/proxy', (req, res) => {
 
         res.send(forwardedBody);
     });
+});
+
+// POST-Anfragen verarbeiten
+app.post('/proxy', (req, res) => {
+    const url = req.body.url;
+    if (!url) {
+        return res.status(400).send('URL not provided');
+    }
+
+    // Weiterleitung an GET /proxy mit der URL als Parameter
+    res.redirect(`/proxy?url=${encodeURIComponent(url)}`);
 });
 
 // Port festlegen und Server starten
